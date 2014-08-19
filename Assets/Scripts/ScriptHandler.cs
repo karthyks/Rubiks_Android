@@ -5,9 +5,13 @@ using System.Collections.Generic;
 
 public class ScriptHandler : MonoBehaviour {
 
+	UIScript uiScript;
     // 3D Matrix to Store Cube Positions
     GameObject[, ,] startRubiks;
     GameObject[, ,] currRubiks;
+
+    List<string> moves;
+    string[] turnTypes;
 
     public float cubePosition = 0.3048f;
 
@@ -22,17 +26,74 @@ public class ScriptHandler : MonoBehaviour {
         startRubiks = new GameObject[3, 3, 3];
         currRubiks = new GameObject[3, 3, 3];
         children = new List<GameObject>();
+        moves = new List<string>();
+        turnTypes = new string[12];
+		uiScript = GameObject.Find ("UIHandler").GetComponent<UIScript> ();
 	}
 
     void Start()
     {
         BuildMatrix(true);
+        TurnTypes();
     }
 	
 	// Update is called once per frame
 	void Update () {
+
+        
 	
 	}
+
+    void TurnTypes()
+    {
+        turnTypes[0] = "wholecube_up";
+        turnTypes[1] = "wholecube_down";
+        turnTypes[2] = "wholecube_left";
+        turnTypes[3] = "wholecube_right";
+        turnTypes[4] = "top_right";
+        turnTypes[5] = "top_left";
+        turnTypes[6] = "bottom_right";
+        turnTypes[7] = "bottom_left";
+        turnTypes[8] = "rhs_up";
+        turnTypes[9] = "rhs_down";
+        turnTypes[10] = "lhs_up";
+        turnTypes[11] = "lhs_down";
+    }
+    IEnumerator Shuffle()
+    {
+		uiScript.shuffleOver = false;
+        for (int i = 0; i < 20; i++)
+        {
+            int j = UnityEngine.Random.Range(0, 12);
+            moves.Add(turnTypes[j]);
+            string type = turnTypes[j].Split('_')[0];
+            string direction = turnTypes[j].Split('_')[1];
+            RotationType(type);
+            if (direction == "up")
+            {
+                SetAxis(Vector3.left);
+                StartCoroutine(Rotate(30));
+            }
+            if (direction == "down")
+            {
+                SetAxis(Vector3.left);
+                StartCoroutine(Rotate(-30));
+            }
+            if (direction == "left")
+            {
+                SetAxis(Vector3.up);
+                StartCoroutine(Rotate(-30));
+            }
+            if (direction == "right")
+            {
+                SetAxis(Vector3.up);
+                StartCoroutine(Rotate(30));
+            }
+
+            yield return new WaitForSeconds(0.4f);
+        } 
+		uiScript.shuffleOver = true;
+    }
 
     void RotationType(string rotationType)
     {
@@ -42,20 +103,20 @@ public class ScriptHandler : MonoBehaviour {
 
         foreach (GameObject cube in cubes)
         {
-            if (rotationType == "Rubix")
+            if (rotationType == "wholecube")
             {
                 cube.transform.parent = Pivot.transform;
             }
             else
             {
-                if (rotationType == "Top")
+                if (rotationType == "top")
                 {
                     if (cube.transform.position.y > 0.1)
                     {
                         cube.transform.parent = Pivot.transform;
                     }
                 }
-                if(rotationType == "Bottom")
+                if (rotationType == "bottom")
                 {
                     if (cube.transform.position.y < -0.1)
                     {
@@ -63,14 +124,14 @@ public class ScriptHandler : MonoBehaviour {
                     }
                 }
 
-                if (rotationType == "Rhs")
+                if (rotationType == "rhs")
                 {
                     if (cube.transform.position.x > 0.1)
                     {
                         cube.transform.parent = Pivot.transform;
                     }
                 }
-                if(rotationType == "Lhs")
+                if (rotationType == "lhs")
                 {
                     if (cube.transform.position.x < -0.1)
                     {
@@ -124,6 +185,44 @@ public class ScriptHandler : MonoBehaviour {
         CheckResult();
     }
 
+
+    IEnumerator Solve()
+    {
+		uiScript.solveOver = false;
+        if (moves.Count != 0 && moves != null)
+        {
+            for (int i = moves.Count - 1; i >= 0; i--)
+            {
+                string type = moves[i].Split('_')[0];
+                string direction = moves[i].Split('_')[1];
+                RotationType(type);
+                if (direction == "up")
+                {
+                    SetAxis(Vector3.left);
+                    StartCoroutine(Rotate(-30));
+                }
+                if (direction == "down")
+                {
+                    SetAxis(Vector3.left);
+                    StartCoroutine(Rotate(30));
+                }
+                if (direction == "left")
+                {
+                    SetAxis(Vector3.up);
+                    StartCoroutine(Rotate(30));
+                }
+                if (direction == "right")
+                {
+                    SetAxis(Vector3.up);
+                    StartCoroutine(Rotate(-30));
+                }
+
+                yield return new WaitForSeconds(0.4f);
+            }
+            moves.Clear();
+        }
+        uiScript.solveOver = true;
+    }
     void BuildMatrix(bool reset)
     {
         int l = 0;

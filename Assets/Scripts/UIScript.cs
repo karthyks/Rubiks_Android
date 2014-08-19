@@ -3,23 +3,49 @@ using System.Collections;
 
 public class UIScript : MonoBehaviour {
 
+
+	public bool shuffleOver;
+	public bool solveOver;
     GameObject scriptHandler;
 	void Start () {
         scriptHandler = GameObject.Find("ScriptHandler");
+		shuffleOver = true;
+		solveOver = true;
 	}
 	
 	void Update () {
-	
+		if (!shuffleOver || !solveOver) 
+		{
+            ButtonEnabler("Shuffle", false);
+            ButtonEnabler("Solve", false);
+		} 
+		else 
+		{
+            ButtonEnabler("Shuffle", true);
+            ButtonEnabler("Solve", true);
+		}
 	}
 
+    void ButtonEnabler(string buttonName, bool enable)
+    {
+        UIButton button = GameObject.Find(buttonName).GetComponent<UIButton>();
+        button.isEnabled = enable;
+    }
 
     void OnGUI()
     {
-        if(GUI.Button(new Rect(20,20,120,30), "Right"))
-        {
-            scriptHandler.BroadcastMessage("RotationType", "Top", SendMessageOptions.DontRequireReceiver);
-            scriptHandler.BroadcastMessage("SetAxis", Vector3.up, SendMessageOptions.DontRequireReceiver);
-            scriptHandler.BroadcastMessage("Rotate", 30, SendMessageOptions.DontRequireReceiver);
-        }
+
     }
+
+	void Pause()
+	{
+		GameObject.Find ("Camera1").camera.enabled = false;
+		GameObject.Find ("Camera").camera.enabled = true;
+	}
+
+	void Resume()
+	{
+		GameObject.Find ("Camera1").camera.enabled = true;
+		GameObject.Find ("Camera").camera.enabled = false;
+	}
 }
